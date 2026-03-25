@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from dotenv import load_dotenv
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -961,7 +961,7 @@ def save_llm_settings(
     provider: str = Form(...),
     model: str = Form(...),
     api_key: str = Form(""),
-) -> HTMLResponse | RedirectResponse:
+) -> Response:
     try:
         resolved_api_key = api_key.strip()
         if not settings.allow_user_supplied_llm_keys:
