@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover
     Agent = None
 
 
-def create_risk_manager_agent(tools: list[Any] | None = None) -> Any:
+def create_risk_manager_agent(tools: list[Any] | None = None, llm: Any | None = None) -> Any:
     """Create risk manager CrewAI agent."""
 
     if Agent is None:
@@ -33,6 +33,7 @@ def create_risk_manager_agent(tools: list[Any] | None = None) -> Any:
             "You are an engineering risk manager who balances security, complexity, and "
             "architectural blast radius before approving production merges."
         ),
+        llm=llm,
         tools=tools or [],
         verbose=False,
         allow_delegation=True,

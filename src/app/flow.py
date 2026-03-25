@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from crews.pr_risk_crew import run_pr_risk_analysis
+from models.llm_models import LLMConfig
 from models.pr_models import PRData
 from models.report_models import RiskReport
 from tools.diff_tools import extract_diff_chunks
@@ -13,18 +14,41 @@ from tools.language_detector import detect_languages
 class PRRiskFlow:
     """Coordinates PR data intake, analysis, and report generation."""
 
-    def run(self, repo: str, owner: str, pr_number: int) -> RiskReport:
+    def run(
+        self,
+        repo: str,
+        owner: str,
+        pr_number: int,
+        github_token: str | None = None,
+        llm_config: LLMConfig | None = None,
+    ) -> RiskReport:
         """Execute full PR risk flow and return final report."""
 
-        pr_data = self.fetch_pr_metadata(repo=repo, owner=owner, pr_number=pr_number)
+        pr_data = self.fetch_pr_metadata(
+            repo=repo,
+            owner=owner,
+            pr_number=pr_number,
+            github_token=github_token,
+        )
         language_map = self.detect_language(pr_data)
         self.parse_diff(pr_data)
-        return self.run_crew(pr_data, language_map)
+        return self.run_crew(pr_data, language_map, llm_config)
 
-    def fetch_pr_metadata(self, repo: str, owner: str, pr_number: int) -> PRData:
+    def fetch_pr_metadata(
+        self,
+        repo: str,
+        owner: str,
+        pr_number: int,
+        github_token: str | None = None,
+    ) -> PRData:
         """Fetch PR metadata and unified diff."""
 
-        return fetch_pr_data(repo=repo, owner=owner, pr_number=pr_number)
+        return fetch_pr_data(
+            repo=repo,
+            owner=owner,
+            pr_number=pr_number,
+            github_token=github_token,
+        )
 
     def detect_language(self, pr_data: PRData) -> dict[str, list[str]]:
         """Detect changed files by language."""
@@ -36,7 +60,12 @@ class PRRiskFlow:
 
         _ = extract_diff_chunks(pr_data.diff)
 
-    def run_crew(self, pr_data: PRData, language_map: dict[str, list[str]]) -> RiskReport:
+    def run_crew(
+        self,
+        pr_data: PRData,
+        language_map: dict[str, list[str]],
+        llm_config: LLMConfig | None = None,
+    ) -> RiskReport:
         """Run CrewAI orchestration layer and return report."""
 
-        return run_pr_risk_analysis(pr_data=pr_data, language_map=language_map)
+        return run_pr_risk_analysis(pr_data=pr_data, language_map=language_map, llm_config=llm_config)

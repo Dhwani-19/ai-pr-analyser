@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 from models.pr_models import PRData
+from tools.github_api import fetch_pr_data_from_api
 
 
 def _run_gh_command(args: list[str]) -> str:
@@ -34,8 +35,16 @@ def _load_event_payload() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def fetch_pr_data(repo: str, owner: str, pr_number: int) -> PRData:
-    """Fetch PR metadata and unified diff using gh CLI, fallback to event/env."""
+def fetch_pr_data(
+    repo: str,
+    owner: str,
+    pr_number: int,
+    github_token: str | None = None,
+) -> PRData:
+    """Fetch PR metadata and unified diff for CLI, Actions, or web execution."""
+
+    if github_token:
+        return fetch_pr_data_from_api(repo=repo, owner=owner, pr_number=pr_number, token=github_token)
 
     fallback_diff = os.getenv("PR_DIFF", "")
     fallback_files = os.getenv("PR_FILES", "")

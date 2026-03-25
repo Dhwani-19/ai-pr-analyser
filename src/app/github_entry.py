@@ -7,6 +7,8 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Ensure `src` is on path when executed as `python src/app/github_entry.py`.
 CURRENT_FILE = Path(__file__).resolve()
 SRC_DIR = CURRENT_FILE.parents[1]
@@ -53,6 +55,7 @@ def _format_security_bucket(score: float) -> str:
 
 
 def main() -> int:
+    load_dotenv()
     owner, repo = _resolve_repo_owner()
     pr_number_env = os.getenv("PR_NUMBER", "")
     pr_number = int(pr_number_env) if pr_number_env.isdigit() else _read_event_pr_number()
@@ -74,6 +77,10 @@ def main() -> int:
     print()
     print("Recommendation:")
     print(report.recommendation)
+    if report.llm_summary:
+        print()
+        print("CrewAI / OpenAI Summary:")
+        print(report.llm_summary)
 
     return 0
 

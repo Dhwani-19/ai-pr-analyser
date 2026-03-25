@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover
     Agent = None
 
 
-def create_typescript_analyzer_agent(tools: list[Any] | None = None) -> Any:
+def create_typescript_analyzer_agent(tools: list[Any] | None = None, llm: Any | None = None) -> Any:
     """Create TypeScript analyzer CrewAI agent with role metadata."""
 
     if Agent is None:
@@ -31,6 +31,7 @@ def create_typescript_analyzer_agent(tools: list[Any] | None = None) -> Any:
             "You are a principal JavaScript/TypeScript engineer specializing in runtime safety "
             "and API edge-case resilience."
         ),
+        llm=llm,
         tools=tools or [],
         verbose=False,
     )

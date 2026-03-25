@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover
     Agent = None
 
 
-def create_python_analyzer_agent(tools: list[Any] | None = None) -> Any:
+def create_python_analyzer_agent(tools: list[Any] | None = None, llm: Any | None = None) -> Any:
     """Create Python analyzer CrewAI agent with role metadata."""
 
     if Agent is None:
@@ -31,6 +31,7 @@ def create_python_analyzer_agent(tools: list[Any] | None = None) -> Any:
             "You are an experienced Python platform engineer focused on readability, "
             "maintainability, and common exploit patterns in backend services."
         ),
+        llm=llm,
         tools=tools or [],
         verbose=False,
     )

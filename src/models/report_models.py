@@ -14,6 +14,7 @@ class RiskReport(BaseModel):
     architectural_score: float = Field(..., ge=0.0, le=1.0)
     recommendation: str
     summary: str
+    llm_summary: str | None = None
 
     @staticmethod
     def level_from_score(score: int) -> str:

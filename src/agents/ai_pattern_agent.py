@@ -19,7 +19,7 @@ REPETITIVE_BLOCK_PATTERN = re.compile(r"(if\s*\(.+\)\s*\{[^}]+\}){2,}", re.DOTAL
 EDGE_CASE_SIGNAL_PATTERN = re.compile(r"\b(None|null|undefined|except|catch)\b")
 
 
-def create_ai_pattern_agent(tools: list[Any] | None = None) -> Any:
+def create_ai_pattern_agent(tools: list[Any] | None = None, llm: Any | None = None) -> Any:
     """Create AI pattern detection CrewAI agent."""
 
     if Agent is None:
@@ -40,6 +40,7 @@ def create_ai_pattern_agent(tools: list[Any] | None = None) -> Any:
             "You are an engineer who studies AI-assisted coding output quality and consistently "
             "flags low-context changes that require deeper human scrutiny."
         ),
+        llm=llm,
         tools=tools or [],
         verbose=False,
     )

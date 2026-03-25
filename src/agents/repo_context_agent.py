@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover - optional runtime dependency
     Agent = None
 
 
-def create_repo_context_agent(tools: list[Any] | None = None) -> Any:
+def create_repo_context_agent(tools: list[Any] | None = None, llm: Any | None = None) -> Any:
     """Create CrewAI agent or fallback descriptor."""
 
     if Agent is None:
@@ -33,6 +33,7 @@ def create_repo_context_agent(tools: list[Any] | None = None) -> Any:
             "You are a staff-level architect focused on mapping code changes to architectural "
             "risk, especially around auth, billing, and security boundaries."
         ),
+        llm=llm,
         tools=tools or [],
         verbose=False,
     )
