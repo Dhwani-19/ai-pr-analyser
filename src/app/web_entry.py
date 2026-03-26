@@ -78,6 +78,13 @@ HTML_BASE = """
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>PR Risk Analyzer</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9RFFQ5NEVN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-9RFFQ5NEVN');
+    </script>
     <style>
       :root {
         --bg: #f3f6f9;
