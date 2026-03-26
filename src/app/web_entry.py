@@ -77,6 +77,7 @@ HTML_BASE = """
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>PR Risk Analyzer</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
       :root {
         --bg: #f3f6f9;
@@ -597,6 +598,37 @@ HTML_BASE = """
 """
 
 
+FAVICON_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8ad7d2" />
+      <stop offset="100%" stop-color="#4aa7ac" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)" />
+  <circle cx="21" cy="22" r="11" fill="#ffffff" fill-opacity="0.92" />
+  <path
+    d="M18 15.5c-3.7 1.2-6.2 4.6-6.2 8.5 0 4.8 3.9 8.7 8.7 8.7 3.6 0 6.8-2.2 8.1-5.4h-4.1c-.9 1.1-2.3 1.8-4 1.8-2.8 0-5.1-2.3-5.1-5.1 0-2.2 1.4-4.1 3.4-4.8l-.8-3.7z"
+    fill="#7b8794"
+  />
+  <path
+    d="M24.1 14.7c2 .9 3.6 2.5 4.4 4.6h-4c-.5-.7-1.3-1.1-2.2-1.4l1.8-3.2z"
+    fill="#7b8794"
+  />
+  <text
+    x="40"
+    y="38"
+    text-anchor="middle"
+    font-family="IBM Plex Sans, Segoe UI, sans-serif"
+    font-size="24"
+    font-weight="700"
+    fill="#10232d"
+  >PR</text>
+</svg>
+""".strip()
+
+
 def _render_page(
     body: str,
     content: str = "",
@@ -867,6 +899,16 @@ def _report_summary_text(report) -> str:
 @app.get("/", response_class=HTMLResponse)
 def home() -> HTMLResponse:
     return HTMLResponse(_render_page(_landing_body()))
+
+
+@app.get("/favicon.svg")
+def favicon_svg() -> Response:
+    return Response(content=FAVICON_SVG, media_type="image/svg+xml")
+
+
+@app.get("/favicon.ico")
+def favicon_ico() -> RedirectResponse:
+    return RedirectResponse("/favicon.svg", status_code=307)
 
 
 @app.get("/healthz", response_class=HTMLResponse)
