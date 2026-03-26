@@ -15,6 +15,7 @@ class RiskReport(BaseModel):
     recommendation: str
     summary: str
     llm_summary: str | None = None
+    llm_timed_out: bool = False
 
     @staticmethod
     def level_from_score(score: int) -> str:

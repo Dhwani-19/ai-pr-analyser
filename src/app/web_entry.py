@@ -271,6 +271,11 @@ HTML_BASE = """
         color: var(--ok);
         border: 1px solid rgba(27, 107, 70, 0.16);
       }
+      .status.warning {
+        background: rgba(183, 121, 31, 0.1);
+        color: #8a5a16;
+        border: 1px solid rgba(183, 121, 31, 0.24);
+      }
       .loading-overlay {
         position: fixed;
         inset: 0;
@@ -1045,8 +1050,15 @@ def analyze(
         )
 
         body = _pulls_body(owner, repo, _llm_summary_text(llm_config), "")
+        timeout_warning_html = (
+            '<div class="status warning">Model-assisted analysis exceeded the time limit and was stopped. '
+            "This result was completed using the deterministic analyzers.</div>"
+            if report.llm_timed_out
+            else ""
+        )
         result_html = f"""
         <div class="status ok">Analysis completed for {html.escape(owner)}/{html.escape(repo)} PR #{pr_number}.</div>
+        {timeout_warning_html}
         <div class="grid">
           <div class="metric"><div class="label">Overall Risk</div><div class="value">{report.overall_score} ({html.escape(report.risk_level)})</div></div>
           <div class="metric"><div class="label">Security</div><div class="value">{report.security_score:.2f}</div></div>

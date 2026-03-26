@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import multiprocessing
+import os
+from queue import Empty
 from typing import Any
 
 from agents.ai_pattern_agent import create_ai_pattern_agent, run_ai_pattern_analysis
@@ -20,6 +23,21 @@ except Exception:  # pragma: no cover - optional runtime dependency
     Crew = None
     Process = None
     Task = None
+
+
+CREWAI_TIMEOUT_NOTE = (
+    "Model-assisted analysis exceeded the configured time limit and was stopped. "
+    "The report below uses the deterministic risk analyzers only."
+)
+
+
+def _crewai_timeout_seconds() -> int:
+    raw_value = os.getenv("CREWAI_TIMEOUT_SECONDS", "90").strip()
+    try:
+        timeout = int(raw_value)
+    except ValueError:
+        timeout = 90
+    return max(timeout, 10)
 
 
 def _build_crewai_objects(llm_config: LLMConfig | None = None) -> tuple[Any, list[Any]]:
@@ -88,6 +106,65 @@ def _run_crewai_hierarchical(pr_data: PRData, llm_config: LLMConfig | None = Non
     return str(result).strip() or None
 
 
+def _crewai_worker(
+    result_queue: multiprocessing.Queue,
+    pr_data_payload: dict[str, Any],
+    llm_config_payload: dict[str, Any] | None,
+) -> None:
+    try:
+        pr_data = PRData(**pr_data_payload)
+        llm_config = LLMConfig(**llm_config_payload) if llm_config_payload else None
+        result_queue.put(
+            {
+                "status": "ok",
+                "result": _run_crewai_hierarchical(pr_data, llm_config),
+            }
+        )
+    except Exception as exc:
+        result_queue.put(
+            {
+                "status": "error",
+                "error": str(exc),
+            }
+        )
+
+
+def _run_crewai_with_timeout(pr_data: PRData, llm_config: LLMConfig | None = None) -> str | None:
+    timeout_seconds = _crewai_timeout_seconds()
+    context = multiprocessing.get_context("spawn")
+    result_queue: multiprocessing.Queue = context.Queue()
+    process = context.Process(
+        target=_crewai_worker,
+        args=(
+            result_queue,
+            pr_data.model_dump(),
+            llm_config.model_dump() if llm_config else None,
+        ),
+    )
+    process.start()
+
+    try:
+        message = result_queue.get(timeout=timeout_seconds)
+    except Empty:
+        if process.is_alive():
+            process.terminate()
+            process.join(timeout=5)
+            if process.is_alive():
+                process.kill()
+                process.join(timeout=5)
+        return CREWAI_TIMEOUT_NOTE
+    finally:
+        result_queue.close()
+        result_queue.join_thread()
+
+    process.join(timeout=5)
+
+    if message.get("status") == "error":
+        raise RuntimeError(message.get("error", "CrewAI execution failed."))
+
+    return message.get("result")
+
+
 def run_pr_risk_analysis(
     pr_data: PRData,
     language_map: dict[str, list[str]] | None = None,
@@ -96,7 +173,8 @@ def run_pr_risk_analysis(
     """Run PR risk analysis via multi-agent orchestration and return RiskReport."""
 
     language_map = language_map or {"python": [], "typescript": []}
-    llm_summary = _run_crewai_hierarchical(pr_data, llm_config) if crewai_enabled() else None
+    llm_summary = _run_crewai_with_timeout(pr_data, llm_config) if crewai_enabled() else None
+    llm_timed_out = llm_summary == CREWAI_TIMEOUT_NOTE
 
     signals = [
         run_repo_context_analysis(pr_data),
@@ -106,4 +184,5 @@ def run_pr_risk_analysis(
     ]
     report = aggregate_risk(signals)
     report.llm_summary = llm_summary
+    report.llm_timed_out = llm_timed_out
     return report
